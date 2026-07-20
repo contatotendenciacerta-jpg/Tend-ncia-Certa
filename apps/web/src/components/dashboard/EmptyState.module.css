@@ -1,0 +1,30 @@
+.wrapper {
+  padding: 48px 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.icon {
+  font-size: 2rem;
+  margin-bottom: 4px;
+}
+
+.title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.body {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  max-width: 440px;
+  line-height: 1.55;
+}
+
+.cta {
+  margin-top: 12px;
+}

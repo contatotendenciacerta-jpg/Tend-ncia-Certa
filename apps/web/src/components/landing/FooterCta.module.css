@@ -1,0 +1,35 @@
+.section {
+  padding-block: 64px 96px;
+}
+
+.card {
+  padding: 48px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(135deg, var(--surface), var(--bg-elevated));
+}
+
+.title {
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  font-weight: 800;
+  color: var(--text-primary);
+  max-width: 480px;
+}
+
+.subtitle {
+  margin-top: 10px;
+  color: var(--text-secondary);
+  max-width: 440px;
+}
+
+.cta {
+  margin-top: 24px;
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: 32px 20px;
+  }
+}
