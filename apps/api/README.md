@@ -84,3 +84,9 @@ Os testes usam Postgres de verdade (não SQLite) porque os models usam tipos
 específicos do dialeto (UUID, ARRAY, Enum nativo). Configure a variável
 `DATABASE_URL` (env var, não `.env`) se o banco de teste tiver credenciais
 diferentes do padrão em `tests/conftest.py`.
+
+## Deploy
+
+Dockerfile + `railway.json` prontos para deploy na Railway. Passo a passo
+completo (incluindo o seed de dados de teste em produção) em
+[`DEPLOY.md`](../../DEPLOY.md) na raiz do repo.

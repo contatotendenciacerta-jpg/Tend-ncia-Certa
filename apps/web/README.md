@@ -61,6 +61,12 @@ src/
   i18n/           # config do next-intl + loader das mensagens
 ```
 
+## Deploy
+
+Zero-config na Vercel (Root Directory = `apps/web`). Passo a passo
+completo, incluindo a sequência com o backend na Railway e o fechamento
+do CORS, em [`DEPLOY.md`](../../DEPLOY.md) na raiz do repo.
+
 ## O que falta (fora do escopo desta etapa)
 
 - Checkout de pagamento (Stripe/Mercado Pago) — as telas linkam para a
