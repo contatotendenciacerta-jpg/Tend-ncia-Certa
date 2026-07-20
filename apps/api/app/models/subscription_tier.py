@@ -1,10 +1,10 @@
 import enum
 
-from sqlalchemy import ARRAY, Boolean, Enum, Integer, String
+from sqlalchemy import ARRAY, Boolean, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
-from app.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from app.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, pg_enum
 
 
 class TierCode(str, enum.Enum):
@@ -21,12 +21,12 @@ class BillingInterval(str, enum.Enum):
 class SubscriptionTier(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "subscription_tiers"
 
-    code: Mapped[TierCode] = mapped_column(Enum(TierCode, name="tier_code"), unique=True, nullable=False)
+    code: Mapped[TierCode] = mapped_column(pg_enum(TierCode, "tier_code"), unique=True, nullable=False)
     name_i18n_key: Mapped[str] = mapped_column(String(255), nullable=False)
     price_cents: Mapped[int] = mapped_column(Integer, nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="BRL")
     billing_interval: Mapped[BillingInterval] = mapped_column(
-        Enum(BillingInterval, name="billing_interval"), nullable=False
+        pg_enum(BillingInterval, "billing_interval"), nullable=False
     )
     markets_allowed: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False, default=list)
     signal_delay_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

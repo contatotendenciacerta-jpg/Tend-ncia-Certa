@@ -2,11 +2,11 @@ import enum
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum, String
+from sqlalchemy import DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
-from app.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from app.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, pg_enum
 
 if TYPE_CHECKING:
     from app.models.device import Device
@@ -32,11 +32,11 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
     role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole, name="user_role"), nullable=False, default=UserRole.SUBSCRIBER
+        pg_enum(UserRole, "user_role"), nullable=False, default=UserRole.SUBSCRIBER
     )
     locale: Mapped[str] = mapped_column(String(8), nullable=False, default="pt-BR")
     status: Mapped[UserStatus] = mapped_column(
-        Enum(UserStatus, name="user_status"), nullable=False, default=UserStatus.ACTIVE
+        pg_enum(UserStatus, "user_status"), nullable=False, default=UserStatus.ACTIVE
     )
     email_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 

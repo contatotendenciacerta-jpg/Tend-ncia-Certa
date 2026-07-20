@@ -4,12 +4,12 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Numeric, String, Text
+from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
-from app.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from app.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, pg_enum
 
 if TYPE_CHECKING:
     from app.models.asset import Asset
@@ -63,23 +63,27 @@ class Signal(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "signals"
 
     asset_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("assets.id"), nullable=False)
-    direction: Mapped[SignalDirection] = mapped_column(Enum(SignalDirection, name="signal_direction"), nullable=False)
+    direction: Mapped[SignalDirection] = mapped_column(
+        pg_enum(SignalDirection, "signal_direction"), nullable=False
+    )
     entry_price: Mapped[Decimal] = mapped_column(Numeric(18, 8), nullable=False)
     stop_loss: Mapped[Decimal] = mapped_column(Numeric(18, 8), nullable=False)
-    timeframe: Mapped[SignalTimeframe] = mapped_column(Enum(SignalTimeframe, name="signal_timeframe"), nullable=False)
-    confidence_level: Mapped[ConfidenceLevel] = mapped_column(
-        Enum(ConfidenceLevel, name="confidence_level"), nullable=False
+    timeframe: Mapped[SignalTimeframe] = mapped_column(
+        pg_enum(SignalTimeframe, "signal_timeframe"), nullable=False
     )
-    source: Mapped[SignalSource] = mapped_column(Enum(SignalSource, name="signal_source"), nullable=False)
+    confidence_level: Mapped[ConfidenceLevel] = mapped_column(
+        pg_enum(ConfidenceLevel, "confidence_level"), nullable=False
+    )
+    source: Mapped[SignalSource] = mapped_column(pg_enum(SignalSource, "signal_source"), nullable=False)
     created_by_admin_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
     )
     algorithm_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     visibility_tier: Mapped[SignalVisibilityTier] = mapped_column(
-        Enum(SignalVisibilityTier, name="signal_visibility_tier"), nullable=False
+        pg_enum(SignalVisibilityTier, "signal_visibility_tier"), nullable=False
     )
     status: Mapped[SignalStatus] = mapped_column(
-        Enum(SignalStatus, name="signal_status"), nullable=False, default=SignalStatus.PENDING
+        pg_enum(SignalStatus, "signal_status"), nullable=False, default=SignalStatus.PENDING
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
