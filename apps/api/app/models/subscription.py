@@ -47,7 +47,11 @@ class Subscription(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     current_period_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     current_period_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    pending_tier_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("subscription_tiers.id"), nullable=True
+    )
 
     user: Mapped["User"] = relationship(back_populates="subscriptions")
-    tier: Mapped["SubscriptionTier"] = relationship()
+    tier: Mapped["SubscriptionTier"] = relationship(foreign_keys=[tier_id])
+    pending_tier: Mapped["SubscriptionTier | None"] = relationship(foreign_keys=[pending_tier_id])
     payments: Mapped[list["Payment"]] = relationship(back_populates="subscription")

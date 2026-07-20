@@ -4,6 +4,10 @@ os.environ.setdefault(
     "DATABASE_URL", "postgresql+psycopg://postgres:postgres@localhost:5432/tendencia_certa_test"
 )
 os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key")
+os.environ.setdefault("STRIPE_API_KEY", "sk_test_dummy")
+os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_test_dummy")
+os.environ.setdefault("MERCADOPAGO_ACCESS_TOKEN", "test-dummy-token")
+os.environ.setdefault("MERCADOPAGO_WEBHOOK_SECRET", "mp-webhook-test-secret")
 
 import pytest
 from fastapi.testclient import TestClient

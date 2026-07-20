@@ -6,14 +6,13 @@ from sqlalchemy.orm import Session, joinedload
 from app.api.deps import get_current_user, get_db
 from app.models.asset import Asset
 from app.models.signal import Signal, SignalStatus
-from app.models.subscription import Subscription, SubscriptionStatus
 from app.models.user import User
 from app.schemas.signal import SignalRead
+from app.services.billing.subscription_service import get_active_subscription
 from app.services.signal_visibility import SignalView, TierRules, filter_visible_signals
 
 router = APIRouter(tags=["signals"])
 
-ACTIVE_SUBSCRIPTION_STATUSES = (SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING)
 CANDIDATE_STATUSES = (SignalStatus.ACTIVE, SignalStatus.HIT_TARGET, SignalStatus.HIT_STOP)
 
 
@@ -22,15 +21,7 @@ def list_signals(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> list[Signal]:
-    subscription = (
-        db.query(Subscription)
-        .filter(
-            Subscription.user_id == current_user.id,
-            Subscription.status.in_(ACTIVE_SUBSCRIPTION_STATUSES),
-        )
-        .order_by(Subscription.created_at.desc())
-        .first()
-    )
+    subscription = get_active_subscription(db, current_user.id)
     if subscription is None:
         return []
 
