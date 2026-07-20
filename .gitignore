@@ -7,6 +7,8 @@ venv/
 
 # Env files
 .env
+.env.*
+!.env.example
 
 # Node / JS (web, mobile apps)
 node_modules/

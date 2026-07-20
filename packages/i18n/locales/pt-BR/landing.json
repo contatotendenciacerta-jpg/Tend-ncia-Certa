@@ -1,0 +1,31 @@
+{
+  "hero": {
+    "eyebrow": "Cripto · Forex · B3",
+    "title": "Sinais de trading que fazem sentido.",
+    "subtitle": "Entradas, stops e alvos claros — gerados por análise algorítmica e validados manualmente, direto no seu painel.",
+    "ctaPrimary": "Criar conta grátis",
+    "ctaSecondary": "Já tenho conta"
+  },
+  "tiers": {
+    "title": "Escolha seu plano",
+    "subtitle": "Cancele quando quiser. Sem contrato de fidelidade.",
+    "loadError": "Não foi possível carregar os planos agora. Tente novamente em instantes.",
+    "empty": "Nenhum plano disponível no momento.",
+    "cta": "Começar agora",
+    "perMonth": "/mês",
+    "perYear": "/ano",
+    "featureMarkets": "Mercados liberados",
+    "featureDelay": "Entrega dos sinais",
+    "featureDelayRealtime": "Tempo real",
+    "featureDelayMinutes": "{minutes} min de atraso",
+    "featureMaxSignals": "Sinais simultâneos",
+    "featureMaxSignalsUnlimited": "Ilimitado",
+    "featureVipSignals": "Sinais exclusivos VIP",
+    "featurePush": "Notificação em tempo real"
+  },
+  "footerCta": {
+    "title": "Pronto para operar com mais clareza?",
+    "subtitle": "Crie sua conta e veja os sinais disponíveis para o seu plano.",
+    "cta": "Criar conta grátis"
+  }
+}

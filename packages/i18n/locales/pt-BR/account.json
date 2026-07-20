@@ -1,0 +1,20 @@
+{
+  "title": "Minha conta",
+  "subtitle": "Informações do seu plano e assinatura.",
+  "noSubscription": {
+    "title": "Você ainda não tem um plano ativo",
+    "body": "Escolha um plano para começar a receber sinais de trading.",
+    "cta": "Ver planos"
+  },
+  "currentPlan": "Plano atual",
+  "status": {
+    "trialing": "Em teste",
+    "active": "Ativo",
+    "past_due": "Pagamento pendente",
+    "canceled": "Cancelado",
+    "expired": "Expirado"
+  },
+  "renewsAt": "Renova em {date}",
+  "pendingDowngrade": "Troca para o plano {tier} agendada para {date}",
+  "changePlan": "Ver planos disponíveis"
+}

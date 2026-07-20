@@ -1,0 +1,64 @@
+.main {
+  flex: 1;
+  padding-block: 40px 64px;
+}
+
+.header {
+  margin-bottom: 28px;
+}
+
+.title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  margin-top: 6px;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.card {
+  max-width: 480px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.planName {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.meta {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.pending {
+  color: var(--vip);
+  background: var(--vip-soft);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.85rem;
+}
+
+.cta {
+  margin-top: 6px;
+}
