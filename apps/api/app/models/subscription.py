@@ -1,0 +1,46 @@
+import enum
+import uuid
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, String
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.db.base import Base
+from app.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+
+
+class SubscriptionStatus(str, enum.Enum):
+    TRIALING = "trialing"
+    ACTIVE = "active"
+    PAST_DUE = "past_due"
+    CANCELED = "canceled"
+    EXPIRED = "expired"
+
+
+class PaymentProvider(str, enum.Enum):
+    STRIPE = "stripe"
+    MERCADOPAGO = "mercadopago"
+    PAGARME = "pagarme"
+
+
+class Subscription(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "subscriptions"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    tier_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("subscription_tiers.id"), nullable=False
+    )
+    status: Mapped[SubscriptionStatus] = mapped_column(
+        Enum(SubscriptionStatus, name="subscription_status"), nullable=False
+    )
+    payment_provider: Mapped[PaymentProvider] = mapped_column(
+        Enum(PaymentProvider, name="payment_provider"), nullable=False
+    )
+    external_subscription_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    current_period_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    current_period_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    user: Mapped["User"] = relationship(back_populates="subscriptions")
+    payments: Mapped[list["Payment"]] = relationship(back_populates="subscription")

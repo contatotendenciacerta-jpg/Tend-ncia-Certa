@@ -159,24 +159,31 @@ Regras de negócio derivadas do modelo:
   ao cliente um sinal que o tier do usuário não deveria ver ainda).
 - `visibility_tier` no `Signal` define o piso: um sinal `vip` nunca aparece
   para `basic`/`pro`, mesmo após o delay.
-- Mudança de tier (upgrade/downgrade) é aplicada a partir do próximo
-  `current_period_start`, exceto upgrade, que pode ser imediato (a decidir
-  na fase de implementação de billing).
+- Upgrade de tier é imediato, com cobrança proporcional (proration) do
+  período restante do ciclo atual.
+- Downgrade de tier só entra em vigor no início do próximo ciclo — o
+  usuário mantém acesso ao tier atual até o fim do período já pago.
 
 ---
 
 ## 3. Arquitetura Geral
 
 ### 3.1 Stack proposta
-- **Backend**: Python + FastAPI. Motivo: o mesmo runtime do backend pode
-  hospedar os algoritmos geradores de sinais (bibliotecas de dados/ML do
-  ecossistema Python), evitando um segundo serviço separado em outra
-  linguagem para os algoritmos.
+- **Backend**: Python + FastAPI, para a API principal (usuários,
+  assinaturas, sinais, autenticação, billing).
+- **Motor de sinais (`signal-engine`)**: serviço Python **separado** desde
+  o MVP, dedicado a rodar os algoritmos geradores de sinal. Mesma
+  linguagem do backend (reaproveita bibliotecas de dados/ML), porém
+  isolado como processo próprio — não roda dentro do FastAPI da API
+  principal. Comunica-se com ela via fila Redis (publica sinais gerados)
+  e/ou chamada a uma API interna de escrita, mantendo o acoplamento baixo
+  e permitindo escalar/reiniciar os algoritmos de forma independente.
 - **Banco de dados**: PostgreSQL (dados relacionais: usuários, assinaturas,
   sinais — todos com integridade referencial importante).
-- **Fila/jobs assíncronos**: Redis + Celery (ou RQ) para: execução periódica
-  dos algoritmos, disparo de notificações push, fechamento de sinais
-  (checagem de stop/alvo atingido).
+- **Fila/jobs assíncronos**: Redis + Celery (ou RQ) no backend principal
+  para disparo de notificações push e fechamento de sinais (checagem de
+  stop/alvo atingido). O mesmo Redis também serve de canal de comunicação
+  com o `signal-engine`.
 - **Web app**: Next.js (App Router), SSR para páginas públicas (landing,
   pricing) e CSR para o dashboard autenticado.
 - **App mobile**: React Native via Expo, consumindo a mesma API REST.
@@ -185,29 +192,34 @@ Regras de negócio derivadas do modelo:
   segundo frontend na v1.
 - **Autenticação**: JWT (access token curto + refresh token), mesmo
   mecanismo para web e mobile.
-- **Pagamentos**: Stripe como opção internacional, ou Mercado
-  Pago/Pagar.me para suportar PIX e boleto no mercado brasileiro. **Decisão
-  pendente do usuário** — impacta o campo `payment_provider`.
+- **Pagamentos**: Stripe **e** Mercado Pago/Pagar.me integrados em
+  conjunto — Stripe para cartão internacional, Mercado Pago/Pagar.me para
+  PIX e boleto no mercado brasileiro. O campo `payment_provider` em
+  `Subscription` já identifica qual gateway processou cada assinatura.
 - **Entrega em tempo real**: WebSocket (ou SSE) para push de sinais no
   dashboard web; Expo Push Notifications / FCM para mobile.
-- **Infra**: Docker Compose em dev; sugestão de Railway/Render/Fly.io para
-  MVP (custo baixo) com caminho de migração para AWS se escalar.
+- **Infra**: Docker Compose em dev; **Railway** (ou Render/Fly.io) para o
+  MVP — custo baixo e deploy simples para múltiplos serviços (API +
+  signal-engine + Postgres + Redis). Migração para AWS fica em aberto para
+  quando houver necessidade real de escalar.
 - **CI/CD**: GitHub Actions (lint, testes, build).
 
 ### 3.2 Estrutura de repositório sugerida (monorepo)
 ```
 /apps
-  /api        -> FastAPI (backend + admin endpoints + algoritmos)
-  /web        -> Next.js (site público + dashboard + admin UI)
-  /mobile     -> Expo React Native
+  /api            -> FastAPI (backend principal: usuários, assinaturas, sinais, billing)
+  /signal-engine  -> serviço Python separado com os algoritmos geradores de sinal
+  /web            -> Next.js (site público + dashboard + admin UI)
+  /mobile         -> Expo React Native
 /packages
-  /i18n       -> arquivos de tradução compartilhados (ver seção 4)
-  /shared-types -> tipos/contratos compartilhados entre web e mobile (gerados a partir do schema da API)
+  /i18n           -> arquivos de tradução compartilhados (ver seção 4)
+  /shared-types   -> tipos/contratos compartilhados entre web e mobile (gerados a partir do schema da API)
 ```
 
 ### 3.3 Fluxo de um sinal
-1. Sinal é criado (admin via painel, ou algoritmo via job agendado) →
-   grava `Signal` com `status = pending` e `published_at` definido.
+1. Sinal é criado (admin via painel, ou pelo `signal-engine` via fila
+   Redis/API interna) → grava `Signal` com `status = pending` e
+   `published_at` definido.
 2. Job de publicação libera o sinal (`status = active`) respeitando o
    `signal_delay_minutes` de cada tier — ou seja, o *mesmo* sinal pode
    já estar visível para VIP/Pro e ainda em delay para Basic.
@@ -296,10 +308,15 @@ verdade de tradução entre frontend e backend.
 
 ---
 
-## 5. Pontos em aberto para decisão antes da implementação
-1. Gateway de pagamento definitivo (Stripe vs Mercado Pago/Pagar.me, ou
-   ambos) — afeta suporte a PIX/boleto.
-2. Se o algoritmo de geração automática de sinais roda dentro do mesmo
-   serviço FastAPI (via Celery) ou como serviço separado desde já.
-3. Política exata de upgrade/downgrade de tier (imediato vs próximo ciclo).
-4. Hospedagem alvo do MVP (Railway/Render/Fly.io vs AWS desde o início).
+## 5. Decisões Registradas (2026-07-20)
+1. **Pagamento**: Stripe e Mercado Pago/Pagar.me integrados juntos —
+   Stripe para cartão internacional, Mercado Pago/Pagar.me para PIX e
+   boleto no Brasil.
+2. **Motor de sinais**: serviço separado (`signal-engine`) desde o MVP,
+   comunicação com a API principal via fila Redis e/ou API interna — não
+   roda dentro do processo do backend FastAPI.
+3. **Upgrade/downgrade de tier**: upgrade é imediato com cobrança
+   proporcional (proration); downgrade só entra em vigor no fim do ciclo
+   já pago.
+4. **Hospedagem do MVP**: Railway (ou Render/Fly.io); migração para AWS
+   fica em aberto para quando houver necessidade real de escalar.
