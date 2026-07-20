@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_db, require_admin
+from app.models.asset import Asset
 from app.models.signal import Signal, SignalSource, SignalStatus
 from app.models.signal_target import SignalTarget
 from app.models.user import User
@@ -13,7 +14,9 @@ router = APIRouter(prefix="/admin/signals", tags=["admin:signals"])
 
 
 def _signal_query(db: Session):
-    return db.query(Signal).options(joinedload(Signal.targets))
+    return db.query(Signal).options(
+        joinedload(Signal.targets), joinedload(Signal.asset).joinedload(Asset.market)
+    )
 
 
 @router.post("", response_model=SignalRead, status_code=status.HTTP_201_CREATED)

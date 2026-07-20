@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.models.market import MarketCode
 from app.models.signal import (
     ConfidenceLevel,
     SignalDirection,
@@ -12,6 +13,22 @@ from app.models.signal import (
     SignalTimeframe,
     SignalVisibilityTier,
 )
+
+
+class MarketSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    code: MarketCode
+    name_i18n_key: str
+
+
+class AssetSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    symbol: str
+    display_name: str
+    market: MarketSummary
 
 
 class SignalTargetCreate(BaseModel):
@@ -72,6 +89,7 @@ class SignalRead(BaseModel):
 
     id: uuid.UUID
     asset_id: uuid.UUID
+    asset: AssetSummary
     direction: SignalDirection
     entry_price: Decimal
     stop_loss: Decimal

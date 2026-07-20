@@ -6,6 +6,7 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = "postgresql+psycopg://postgres:postgres@localhost:5432/tendencia_certa"
     REDIS_URL: str = "redis://localhost:6379/0"
+    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
     JWT_SECRET_KEY: str = "change-me-in-production"
     JWT_ALGORITHM: str = "HS256"
