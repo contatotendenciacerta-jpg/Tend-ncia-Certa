@@ -42,6 +42,14 @@ uvicorn app.main:app --reload
   - `POST /billing/stripe/webhook` e `POST /billing/mercadopago/webhook`
     (públicos, chamados pelos provedores) — nunca confiam no payload sem
     validar a assinatura (`Stripe-Signature` / `X-Signature` + `X-Request-Id`)
+  - `STRIPE_*`/`MERCADOPAGO_*` são opcionais (`None` por padrão) — sem
+    elas configuradas, esses 4 endpoints respondem `503` ("pagamento
+    ainda não configurado") em vez de quebrar; o resto da API funciona
+    normalmente
+- **Admin — teste sem pagamento**: `POST /admin/users/{id}/grant-subscription`
+  (`tier_id`, `duration_days`) ativa uma assinatura na hora, sem Stripe/MP,
+  registrada com `payment_provider = manual`. Só para testar o produto —
+  não é uma funcionalidade do produto em si.
 
 ### Regra de upgrade/downgrade
 

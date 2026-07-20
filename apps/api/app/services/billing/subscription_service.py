@@ -190,3 +190,31 @@ def mark_canceled(db: Session, subscription: Subscription) -> Subscription:
     db.commit()
     db.refresh(subscription)
     return subscription
+
+
+def grant_subscription(
+    db: Session, *, user_id: uuid.UUID, tier: SubscriptionTier, duration_days: int
+) -> Subscription:
+    """Admin-only test helper: activates a subscription with no Payment
+    record and no payment provider involved. See
+    POST /admin/users/{id}/grant-subscription."""
+    now = datetime.now(timezone.utc)
+
+    existing = get_active_subscription(db, user_id)
+    if existing is not None:
+        existing.status = SubscriptionStatus.CANCELED
+
+    subscription = Subscription(
+        user_id=user_id,
+        tier_id=tier.id,
+        status=SubscriptionStatus.ACTIVE,
+        payment_provider=PaymentProvider.MANUAL,
+        external_subscription_id=None,
+        current_period_start=now,
+        current_period_end=now + timedelta(days=duration_days),
+        cancel_at_period_end=False,
+    )
+    db.add(subscription)
+    db.commit()
+    db.refresh(subscription)
+    return subscription

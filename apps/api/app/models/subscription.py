@@ -28,6 +28,7 @@ class PaymentProvider(str, enum.Enum):
     STRIPE = "stripe"
     MERCADOPAGO = "mercadopago"
     PAGARME = "pagarme"
+    MANUAL = "manual"
 
 
 class Subscription(UUIDPrimaryKeyMixin, TimestampMixin, Base):

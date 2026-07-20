@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.routes import (
     account,
+    admin_grants,
     assets,
     auth,
     billing_mercadopago,
@@ -24,3 +25,4 @@ api_router.include_router(signals_admin.router)
 api_router.include_router(signals_public.router)
 api_router.include_router(billing_stripe.router)
 api_router.include_router(billing_mercadopago.router)
+api_router.include_router(admin_grants.router)

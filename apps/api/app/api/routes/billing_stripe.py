@@ -4,7 +4,7 @@ import stripe as stripe_sdk
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user, get_db, require_stripe_configured
 from app.core.config import settings
 from app.models.subscription import PaymentProvider, Subscription
 from app.models.subscription_tier import SubscriptionTier
@@ -30,6 +30,7 @@ def create_checkout_session(
     payload: CheckoutRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    _: None = Depends(require_stripe_configured),
 ) -> dict:
     tier = db.get(SubscriptionTier, payload.tier_id)
     if tier is None or not tier.is_active:
@@ -68,7 +69,11 @@ def create_checkout_session(
 
 
 @router.post("/webhook", status_code=status.HTTP_200_OK)
-async def stripe_webhook(request: Request, db: Session = Depends(get_db)) -> dict:
+async def stripe_webhook(
+    request: Request,
+    db: Session = Depends(get_db),
+    _: None = Depends(require_stripe_configured),
+) -> dict:
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature", "")
 

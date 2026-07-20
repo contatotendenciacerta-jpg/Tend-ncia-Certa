@@ -5,6 +5,14 @@ partir deste repositório. Ordem importa: o backend precisa existir antes
 do frontend (para saber a URL da API), e o CORS só pode ser fechado
 depois que a Vercel gerar a URL do frontend.
 
+**Stripe e Mercado Pago são opcionais no primeiro deploy.** A API sobe
+normalmente sem essas variáveis — só os endpoints `/billing/stripe/*` e
+`/billing/mercadopago/*` retornam `503` ("pagamento ainda não
+configurado") até você configurar. Para testar o produto sem pagamento
+de verdade, use o endpoint de concessão manual de assinatura (seção 2).
+Configurar Stripe/Mercado Pago de verdade é a seção 5, feita quando
+quiser.
+
 ---
 
 ## 1. Backend na Railway
@@ -17,14 +25,12 @@ depois que a Vercel gerar a URL do frontend.
    Docker, roda `alembic upgrade head` antes do `uvicorn` a cada boot).
 3. **Adicione um Postgres**: no mesmo projeto, **New → Database → Add
    PostgreSQL**.
-4. Na aba **Variables** do serviço da API, configure (veja a tabela
-   completa na seção 4 abaixo):
+4. Na aba **Variables** do serviço da API, configure só o essencial para
+   o primeiro deploy (tabela completa na seção 4):
    - `DATABASE_URL` — **não** cole o valor bruto que a Railway gera para
      o Postgres. Ele vem como `postgresql://...` (driver psycopg2), mas
      o projeto usa **psycopg3**. Duas formas de resolver:
-     - **Referência (recomendado, se atualiza sozinho)**: na aba
-       Variables do serviço da API, adicione uma variável `DATABASE_URL`
-       com o valor:
+     - **Referência (recomendado, se atualiza sozinho)**:
        ```
        postgresql+psycopg://${{Postgres.PGUSER}}:${{Postgres.PGPASSWORD}}@${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}
        ```
@@ -33,7 +39,10 @@ depois que a Vercel gerar a URL do frontend.
      - **Manual (mais simples)**: copie o `DATABASE_URL` que a Railway
        gerou para o Postgres e cole como valor, só trocando o começo de
        `postgresql://` para `postgresql+psycopg://`.
-   - As demais variáveis (JWT, Stripe, Mercado Pago, CORS) — ver seção 4.
+   - `JWT_SECRET_KEY` — gere com `openssl rand -hex 32` no seu terminal.
+   - `CORS_ORIGINS` — deixe `["http://localhost:3000"]` por enquanto;
+     atualiza na seção 4 depois que a Vercel existir.
+   - **Não precisa** definir `STRIPE_*` / `MERCADOPAGO_*` agora.
 5. Deploy. Depois de subir, vá em **Settings → Networking → Generate
    Domain** para obter a URL pública (algo como
    `https://tendencia-certa-api-production.up.railway.app`).
@@ -66,6 +75,22 @@ Demo login:   demo@tendenciacerta.com / demo12345
 
 Troque as duas senhas assim que confirmar o acesso.
 
+### Testar planos sem Stripe/Mercado Pago
+
+O seed já deixa o usuário demo com um plano Pro ativo. Para testar outro
+tier, ou dar acesso a outro usuário sem passar pelo checkout, use (como
+admin, via `/docs` ou `curl`):
+
+```
+POST /admin/users/{user_id}/grant-subscription
+{"tier_id": "<id de um tier>", "duration_days": 30}
+```
+
+Isso ativa a assinatura na hora, sem cobrar nada e sem depender de
+Stripe/Mercado Pago — registrada com `payment_provider = manual` para
+não se confundir com pagamento de verdade. É só para teste; não é uma
+funcionalidade exposta ao produto.
+
 ## 3. Frontend na Vercel
 
 1. **vercel.com → Add New → Project** → importe o mesmo repositório
@@ -93,24 +118,30 @@ CORS_ORIGINS=["https://tendencia-certa-web.vercel.app"]
 próprio depois), é só listar todas no array. Redeploy/restart o serviço
 da API pra aplicar.
 
+Neste ponto você já tem o produto no ar, testável de ponta a ponta
+(cadastro, login, dashboard, conta) sem nenhuma configuração de
+pagamento.
+
 ---
 
-## Variáveis de ambiente — o que preencher manualmente
+## 5. Configurar pagamento de verdade (Stripe / Mercado Pago) — quando quiser
 
-Nenhuma dessas eu posso inventar por você — ou vem de um serviço externo
-(Stripe/Mercado Pago), ou precisa ser gerada localmente por você para
-nunca aparecer em texto compartilhado.
+Nenhuma dessas eu posso inventar por você — vêm de um serviço externo ou
+precisam ser geradas localmente por você para nunca aparecer em texto
+compartilhado. Enquanto não configurar, `/billing/stripe/*` e
+`/billing/mercadopago/*` respondem `503`; todo o resto do produto
+continua funcionando normalmente.
 
 | Variável | Onde | De onde vem |
 |---|---|---|
-| `DATABASE_URL` | Railway (API) | Gerada pelo plugin Postgres da própria Railway — só ajuste o esquema para `postgresql+psycopg://` (seção 1) |
-| `JWT_SECRET_KEY` | Railway (API) | **Gere você**: rode `openssl rand -hex 32` no seu terminal e cole o resultado |
-| `CORS_ORIGINS` | Railway (API) | URL pública que a Vercel gerar (seção 4) |
 | `STRIPE_API_KEY` | Railway (API) | Sua chave secreta em [dashboard.stripe.com/apikeys](https://dashboard.stripe.com/apikeys) (comece com a de teste, `sk_test_...`) |
-| `STRIPE_WEBHOOK_SECRET` | Railway (API) | Gerado pelo Stripe ao criar um webhook endpoint apontando para `https://<url-da-api>/billing/stripe/webhook` (só dá pra fazer depois que a API tiver URL pública) |
+| `STRIPE_WEBHOOK_SECRET` | Railway (API) | Gerado pelo Stripe ao criar um webhook endpoint apontando para `https://<url-da-api>/billing/stripe/webhook` |
 | `MERCADOPAGO_ACCESS_TOKEN` | Railway (API) | Painel de credenciais do Mercado Pago (Access Token de teste ou produção) |
 | `MERCADOPAGO_WEBHOOK_SECRET` | Railway (API) | Gerado ao configurar a notificação/webhook no painel do Mercado Pago apontando para `https://<url-da-api>/billing/mercadopago/webhook` |
-| `API_BASE_URL` | Vercel (web) | URL pública gerada pelo Railway (seção 1.5) |
+
+Depois de configurar as quatro, redeploy/restart o serviço da API — os
+endpoints de billing passam a funcionar sem mais nenhuma mudança de
+código.
 
 ### Variáveis que já têm um default razoável (mexa só se quiser)
 
@@ -131,3 +162,17 @@ nunca aparecer em texto compartilhado.
 - `DATABASE_URL` do lado do **plugin** Postgres (a própria Railway
   gera) — só a variável do **serviço da API** precisa da correção de
   esquema acima.
+
+---
+
+## Resumo — variáveis do primeiro deploy
+
+| Variável | Onde | De onde vem |
+|---|---|---|
+| `DATABASE_URL` | Railway (API) | Gerada pelo plugin Postgres — só ajuste o esquema para `postgresql+psycopg://` (seção 1) |
+| `JWT_SECRET_KEY` | Railway (API) | **Gere você**: rode `openssl rand -hex 32` no seu terminal e cole o resultado |
+| `CORS_ORIGINS` | Railway (API) | `["http://localhost:3000"]` no início; URL da Vercel depois (seção 4) |
+| `API_BASE_URL` | Vercel (web) | URL pública gerada pelo Railway (seção 1.5) |
+
+`STRIPE_*` e `MERCADOPAGO_*` ficam para a seção 5, quando quiser ativar
+pagamento de verdade.
