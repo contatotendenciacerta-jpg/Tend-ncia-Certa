@@ -1,6 +1,7 @@
 import enum
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
@@ -8,6 +9,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 from app.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+
+if TYPE_CHECKING:
+    from app.models.payment import Payment
+    from app.models.subscription_tier import SubscriptionTier
+    from app.models.user import User
 
 
 class SubscriptionStatus(str, enum.Enum):
@@ -43,4 +49,5 @@ class Subscription(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     user: Mapped["User"] = relationship(back_populates="subscriptions")
+    tier: Mapped["SubscriptionTier"] = relationship()
     payments: Mapped[list["Payment"]] = relationship(back_populates="subscription")
