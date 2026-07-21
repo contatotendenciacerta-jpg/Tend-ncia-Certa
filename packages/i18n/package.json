@@ -1,7 +1,0 @@
-{
-  "name": "@tendencia-certa/i18n",
-  "version": "0.1.0",
-  "private": true,
-  "description": "Shared translation catalogs (pt-BR default, en/es to follow) for the Tendência Certa web and mobile apps.",
-  "main": "index.js"
-}
